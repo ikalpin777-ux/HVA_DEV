@@ -1293,25 +1293,30 @@ function bindAll(){
     if($('sb-ready'))$('sb-ready').textContent=ready;
     if($('sb-pub'))$('sb-pub').textContent=pub;
     var list=$('csbList');if(!list)return;
-    var allActive=_sbCat==='All';
-    var html='<div class="csb-item'+(allActive?' active':'')+'" onclick="setSbCat('All',this)">'+
+    // Use data-cat attribute — no inline onclick (avoids quote escaping issues)
+    var h='<div class="csb-item'+(_sbCat==='All'?' active':'')+'" data-cat="All">'+
       '<span class="csb-lbl">All</span><span class="csb-ct">'+entries.length+'</span></div>'+
       '<div class="csb-div"></div>';
     Object.keys(cats).sort().forEach(function(c){
-      var active=_sbCat===c;
-      html+='<div class="csb-item'+(active?' active':'')+'" onclick="setSbCat(''+esc(c)+'',this)">'+
+      h+='<div class="csb-item'+(_sbCat===c?' active':'')+'" data-cat="'+esc(c)+'">'+
         '<span class="csb-lbl">'+esc(c)+'</span><span class="csb-ct">'+cats[c]+'</span></div>';
     });
-    list.innerHTML=html;
+    list.innerHTML=h;
   }
-  function setSbCat(cat,el){
+  function setSbCat(cat){
     _sbCat=cat;
-    document.querySelectorAll('.csb-item').forEach(function(i){i.classList.remove('active');});
-    if(el)el.classList.add('active');
-    // Sync with cat-filter dropdown
+    renderSidebar();
     var cf=$('cat-filter');
     if(cf){cf.value=cat==='All'?'All':cat;}
     renderTable();
+  }
+  // Delegated click handler for sidebar — safe, no inline JS
+  var csbEl=$('catSidebar');
+  if(csbEl){
+    csbEl.addEventListener('click',function(e){
+      var item=e.target.closest('[data-cat]');
+      if(item){setSbCat(item.getAttribute('data-cat'));}
+    });
   }
   $('btn-clear-form').onclick=clearForm;
   $('form-row').addEventListener('keydown',function(ev){if(ev.key==='Enter'&&(ev.target.tagName==='INPUT'))handleAdd();});
